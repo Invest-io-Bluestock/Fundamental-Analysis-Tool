@@ -1,0 +1,5 @@
+env\Scripts\activate - for env activation
+
+MySQL80
+mypass@123
+
