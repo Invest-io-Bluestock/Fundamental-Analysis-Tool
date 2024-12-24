@@ -1,117 +1,95 @@
-from fastapi import FastAPI, HTTPException, Depends
-from sqlalchemy import create_engine, Column, Integer, String, Float
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
+from motor.motor_asyncio import AsyncIOMotorClient
+from pydantic import BaseModel, Field
 from typing import List, Optional
+from bson import ObjectId
+import os
 
-# Database configuration
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://user:password@localhost/nifty100db"
+app = FastAPI(title="Nifty 100 Companies API")
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+# MongoDB connection
+MONGODB_URL = os.environ.get("MONGODB_URL", "mongodb://localhost:27017")
+client = AsyncIOMotorClient(MONGODB_URL)
+db = client.nifty100db
 
-# Database Model
-class Company(Base):
-    __tablename__ = "companies"
+# Pydantic models
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
 
-    id = Column(Integer, primary_key=True, index=True)
-    symbol = Column(String(50), unique=True, index=True)
-    company_name = Column(String(200))
-    sector = Column(String(100))
-    market_cap = Column(Float)
-    weight = Column(Float)
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid objectid")
+        return ObjectId(v)
 
-# Pydantic Models
-class CompanyBase(BaseModel):
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(type="string")
+
+class CompanyModel(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id")
     symbol: str
     company_name: str
     sector: str
     market_cap: float
     weight: float
 
-class CompanyCreate(CompanyBase):
-    pass
-
-class CompanyResponse(CompanyBase):
-    id: int
-
     class Config:
-        orm_mode = True
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+class CompanyCreate(BaseModel):
+    symbol: str
+    company_name: str
+    sector: str
+    market_cap: float
+    weight: float
 
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# API routes
+@app.post("/companies/", response_model=CompanyModel)
+async def create_company(company: CompanyCreate):
+    company_dict = company.dict()
+    result = await db.companies.insert_one(company_dict)
+    created_company = await db.companies.find_one({"_id": result.inserted_id})
+    return CompanyModel(**created_company)
 
-app = FastAPI(title="Nifty 100 Companies API")
-
-# API Endpoints
-@app.post("/companies/", response_model=CompanyResponse)
-def create_company(company: CompanyCreate, db: Session = Depends(get_db)):
-    db_company = Company(**company.dict())
-    db.add(db_company)
-    try:
-        db.commit()
-        db.refresh(db_company)
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail="Symbol already exists")
-    return db_company
-
-@app.get("/companies/", response_model=List[CompanyResponse])
-def get_companies(
-    skip: int = 0, 
-    limit: int = 100, 
-    sector: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    query = db.query(Company)
+@app.get("/companies/", response_model=List[CompanyModel])
+async def get_companies(skip: int = 0, limit: int = 100, sector: Optional[str] = None):
+    query = {}
     if sector:
-        query = query.filter(Company.sector == sector)
-    return query.offset(skip).limit(limit).all()
+        query["sector"] = sector
+    cursor = db.companies.find(query).skip(skip).limit(limit)
+    companies = await cursor.to_list(length=limit)
+    return companies
 
-@app.get("/companies/{symbol}", response_model=CompanyResponse)
-def get_company(symbol: str, db: Session = Depends(get_db)):
-    company = db.query(Company).filter(Company.symbol == symbol).first()
+@app.get("/companies/{symbol}", response_model=CompanyModel)
+async def get_company(symbol: str):
+    company = await db.companies.find_one({"symbol": symbol})
     if company is None:
         raise HTTPException(status_code=404, detail="Company not found")
-    return company
+    return CompanyModel(**company)
 
-@app.put("/companies/{symbol}", response_model=CompanyResponse)
-def update_company(
-    symbol: str, 
-    company_update: CompanyCreate, 
-    db: Session = Depends(get_db)
-):
-    db_company = db.query(Company).filter(Company.symbol == symbol).first()
-    if db_company is None:
+@app.put("/companies/{symbol}", response_model=CompanyModel)
+async def update_company(symbol: str, company_update: CompanyCreate):
+    update_result = await db.companies.update_one(
+        {"symbol": symbol}, {"$set": company_update.dict()}
+    )
+    if update_result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Company not found")
-    
-    for key, value in company_update.dict().items():
-        setattr(db_company, key, value)
-    
-    try:
-        db.commit()
-        db.refresh(db_company)
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=400, detail="Update failed")
-    return db_company
+    updated_company = await db.companies.find_one({"symbol": symbol})
+    return CompanyModel(**updated_company)
 
 @app.delete("/companies/{symbol}")
-def delete_company(symbol: str, db: Session = Depends(get_db)):
-    company = db.query(Company).filter(Company.symbol == symbol).first()
-    if company is None:
+async def delete_company(symbol: str):
+    delete_result = await db.companies.delete_one({"symbol": symbol})
+    if delete_result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Company not found")
-    
-    db.delete(company)
-    db.commit()
     return {"message": "Company deleted successfully"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
