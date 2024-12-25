@@ -41,9 +41,9 @@ class PyObjectId(ObjectId):
         return ObjectId(v)
 
     @classmethod
-    def __modify_schema__(cls, field_schema):
+    def __get_pydantic_json_schema__(cls, field_schema):
         field_schema.update(type="string")
-
+        return field_schema
 class CompanyModel(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id")
     symbol: str
@@ -53,7 +53,7 @@ class CompanyModel(BaseModel):
     weight: float
 
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -136,18 +136,15 @@ async def read_companies(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 # Startup and shutdown events
-@app.on_event("startup")
-async def startup_db_client():
-    app.mongodb_client = AsyncIOMotorClient(MONGODB_URL)
-    app.mongodb = app.mongodb_client.nifty100db
-    logger.info("Connected to MongoDB")
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    app.mongodb_client.close()
-    logger.info("Disconnected from MongoDB")
+@app.get("/", response_class=HTMLResponse)
+async def read_companies(request: Request):
+    try:
+        companies = await db.companies.find().to_list(length=100)
+        return templates.TemplateResponse("index.html", {"request": request, "companies": companies})
+    except Exception as e:
+        logger.error(f"Error reading companies: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-
