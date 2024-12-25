@@ -3,3 +3,6 @@ env\Scripts\activate - for env activation
 MySQL80
 mypass@123
 
+http://localhost:8000/docs
+
+http://localhost:8000
