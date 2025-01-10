@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Analysis Platform</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F9FE;
+            color: #1f2937;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* Header styles */
+        .header {
+            background-color: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 56px;
+        }
+
+        .logo {
+            height: 32px;
+        }
+
+        .nav {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav a {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #4b5563;
+            text-decoration: none;
+        }
+
+        .nav a:hover {
+            color: #1f2937;
+        }
+
+        .search-login {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            padding: 0.5rem 0.75rem 0.5rem 2rem;
+            font-size: 0.875rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            width: 280px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border-radius: 0.375rem;
+            cursor: pointer;
+        }
+
+        .btn-login {
+            background-color: transparent;
+            color: #4b5563;
+            border: none;
+        }
+
+        .btn-primary {
+            background-color: #6C5DD3;
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #5B4EC2;
+        }
+
+        /* Sub-header styles */
+        .sub-header {
+            background-color: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .sub-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 48px;
+        }
+
+        .tabs {
+            display: flex;
+            height: 100%;
+        }
+
+        .tab {
+            padding: 0 1rem;
+            font-size: 0.875rem;
+            color: #4b5563;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            height: 100%;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            color: #6C5DD3;
+            border-bottom-color: #6C5DD3;
+        }
+
+        .disclaimer {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        /* Main content styles */
+        .main-content {
+            padding: 1.5rem 0;
+        }
+
+        .company-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .company-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .company-info {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .company-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 0.25rem;
+        }
+
+        .company-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .company-details {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .company-details a {
+            color: #6C5DD3;
+            text-decoration: none;
+        }
+
+        .company-details a:hover {
+            text-decoration: underline;
+        }
+
+        .company-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            background-color: transparent;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            cursor: pointer;
+        }
+
+        .financial-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+        }
+
+        .metric-label {
+            color: #6b7280;
+        }
+
+        .about-section {
+            margin-top: 1.5rem;
+        }
+
+        .about-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .about-content {
+            font-size: 0.875rem;
+            color: #4b5563;
+        }
+
+        .read-more {
+            font-size: 0.875rem;
+            color: #6C5DD3;
+            text-decoration: none;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        .read-more:hover {
+            text-decoration: underline;
+        }
+
+        .pros-cons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .card-list {
+            list-style-type: none;
+            font-size: 0.875rem;
+            color: #4b5563;
+        }
+
+        .card-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        .pros {
+            border: 1px solid #d1fae5;
+        }
+
+        .cons {
+            border: 1px solid #fee2e2;
+        }
+
+        .machine-generated {
+            grid-column: span 2;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .profit-loss {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+        }
+
+        .profit-loss-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .profit-loss-subtitle {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: right;
+        }
+
+        th {
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        td {
+            color: #4b5563;
+        }
+
+        th:first-child, td:first-child {
+            text-align: left;
+        }
+
+        tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="nav">
+                    <img src="data:image/jpeg;base64,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" alt="StockTicker" class="logo">
+                    <a href="#">HOME</a>
+                    <a href="#">SCREENS</a>
+                    <a href="#">TOOLS</a>
+                </div>
+                <div class="search-login">
+                    <div class="search-container">
+                        <input type="text" placeholder="Search for a company" class="search-input">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </div>
+                    <button class="btn btn-login">LOGIN</button>
+                    <button class="btn btn-primary">GET FREE ACCOUNT</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="sub-header">
+        <div class="container">
+            <div class="sub-header-content">
+                <div class="tabs">
+                    <a href="#" class="tab active">TCS</a>
+                    <a href="#" class="tab">Analysis</a>
+                    <a href="#" class="tab">Profit & Loss</a>
+                    <a href="#" class="tab">Balance Sheet</a>
+                    <a href="#" class="tab">Cash Flow</a>
+                    <a href="#" class="tab">Ratios</a>
+                    <a href="#" class="tab">Documents</a>
+                </div>
+                <a href="#" class="disclaimer">Disclaimer</a>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="company-card">
+                <div class="company-header">
+                    <div class="company-info">
+                        <img src="https://images.5paisa.com/MarketIcons/TATAPOWER.png" alt="TCS Logo" class="company-logo">
+                        <div>
+                            <h1 class="company-name">Tata Consultancy Services Ltd</h1>
+                            <div class="company-details">
+                                <a href="https://tcs.com">tcs.com</a>
+                                <span>BSE: 532540</span>
+                                <span>NSE: TCS</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="company-actions">
+                        <button class="btn-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </button>
+                        <button class="btn">Launch</button>
+                        <button class="btn btn-primary">LAUNCH CHART</button>
+                    </div>
+                </div>
+                <div class="financial-metrics">
+                    <div>
+                        <div class="metric">
+                            <span class="metric-label">Book Value</span>
+                            <span>₹ 281</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Face Value</span>
+                            <span>₹ 100</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="metric">
+                            <span class="metric-label">ROCE</span>
+                            <span>64.3 %</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">ROE</span>
+                            <span>51.5 %</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-section">
+                    <h2 class="about-title">ABOUT</h2>
+                    <p class="about-content">
+                        Tata Consultancy Services is the flagship company and a part of Tata group. It is an IT services, consulting and business solutions organization that has been partnering with many of the world's largest businesses in their transformation journeys for over 50 years.
+                    </p>
+                    <a href="#" class="read-more">READ MORE</a>
+                </div>
+            </div>
+
+            <div class="pros-cons">
+                <div class="card pros">
+                    <h2 class="card-title">PROS</h2>
+                    <ul class="card-list">
+                        <li>Company is almost debt free.</li>
+                        <li>Company has a good return on equity (ROE) track record: 3 Years ROE 47.4%</li>
+                        <li>Company has been maintaining a healthy dividend payout of 66.2%</li>
+                    </ul>
+                </div>
+                <div class="card cons">
+                    <h2 class="card-title">CONS</h2>
+                    <ul class="card-list">
+                        <li>Stock is trading at 15.3 times its book value</li>
+                        <li>The company has delivered a poor sales growth of 10.5% over past five years.</li>
+                    </ul>
+                </div>
+                <div class="machine-generated">* The pros and cons are machine generated.</div>
+            </div>
+
+            <div class="profit-loss">
+                <h2 class="profit-loss-title">Profit & Loss</h2>
+                <p class="profit-loss-subtitle"><p class="profit-loss-subtitle">Consolidated Figures in Rs. Crores</p>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Mar 2021</th>
+                                <th>Mar 2022</th>
+                                <th>Mar 2023</th>
+                                <th>Mar 2024</th>
+                                <th>TTM</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Sales</td>
+                                <td>164,177</td>
+                                <td>191,754</td>
+                                <td>225,458</td>
+                                <td>240,893</td>
+                                <td>248,692</td>
+                            </tr>
+                            <tr>
+                                <td>Expenses</td>
+                                <td>117,631</td>
+                                <td>138,697</td>
+                                <td>166,199</td>
+                                <td>176,597</td>
+                                <td>181,747</td>
+                            </tr>
+                            <tr>
+                                <td>Operating Profit</td>
+                                <td>46,546</td>
+                                <td>53,057</td>
+                                <td>59,259</td>
+                                <td>64,296</td>
+                                <td>66,945</td>
+                            </tr>
+                            <tr>
+                                <td>OPM %</td>
+                                <td>28%</td>
+                                <td>28%</td>
+                                <td>26%</td>
+                                <td>27%</td>
+                                <td>27%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Simple tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+        document.addEventListener('DOMContentLoaded', function() {
+    // Tab functionality
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Fetch company data
+    /*fetch('/api/companies/1/')
+        .then(response => response.json())
+        .then(data => {
+            document.querySelector('.company-name').textContent = data.name;
+            document.querySelector('.company-logo').src = data.logo;
+            document.querySelector('.company-details a').href = data.website;
+            document.querySelector('.company-details a').textContent = data.website;
+            document.querySelector('.company-details span:nth-child(2)').textContent = `BSE: ${data.bse_code}`;
+            document.querySelector('.company-details span:nth-child(3)').textContent = `NSE: ${data.nse_code}`;
+            document.querySelector('.financial-metrics .metric:nth-child(1) span:last-child').textContent = `₹ ${data.book_value}`;
+            document.querySelector('.financial-metrics .metric:nth-child(2) span:last-child').textContent = `₹ ${data.face_value}`;
+            document.querySelector('.financial-metrics .metric:nth-child(3) span:last-child').textContent = `${data.roce} %`;
+            document.querySelector('.financial-metrics .metric:nth-child(4) span:last-child').textContent = `${data.roe} %`;
+            document.querySelector('.about-content').textContent = data.about;
+        });
+        */
+    // Fetch financial data
+    /*fetch('/api/financial-data/')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.querySelector('.profit-loss table tbody');
+            tableBody.innerHTML = '';
+            const years = [...new Set(data.results.map(item => item.year))].sort().reverse().slice(0, 5);
+            const rows = ['Sales', 'Expenses', 'Operating Profit', 'OPM %'];
+            
+            rows.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${row}</td>`;
+                years.forEach(year => {
+                    const yearData = data.results.find(item => item.year === year);
+                    let value = '';
+                    if (yearData) {
+                        switch(index) {
+                            case 0: value = yearData.sales; break;
+                            case 1: value = yearData.expenses; break;
+                            case 2: value = yearData.operating_profit; break;
+                            case 3: value = yearData.opm + '%'; break;
+                        }
+                    }
+                    tr.innerHTML += `<td>${value}</td>`;
+                });
+                tableBody.appendChild(tr);
+            });
+        });
+
+    // Fetch pros and cons
+    fetch('/api/pros-and-cons/1/')
+        .then(response => response.json())
+        .then(data => {
+            const prosList = document.querySelector('.pros .card-list');
+            const consList = document.querySelector('.cons .card-list');
+            prosList.innerHTML = data.pros.split('\n').map(pro => `<li>${pro}</li>`).join('');
+            consList.innerHTML = data.cons.split('\n').map(con => `<li>${con}</li>`).join('');
+        });*/
+    });
+
+    </script>
+</body>
+</html>
